@@ -26,6 +26,7 @@ dependencies {
     implementation("net.axay:KSpigot:v1.16.5_R24")
     implementation("dev.jorel:commandapi-shade:5.8")
     compileOnly("com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT")
+    compileOnly("org.bukkit:craftbukkit:1.16.5-R0.1-SNAPSHOT")
 }
 
 group = "de.hglabor.plugins"

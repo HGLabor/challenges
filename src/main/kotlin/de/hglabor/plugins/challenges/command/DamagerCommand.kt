@@ -8,10 +8,12 @@ import dev.jorel.commandapi.arguments.GreedyStringArgument
 import dev.jorel.commandapi.executors.PlayerCommandExecutor
 import net.axay.kspigot.chat.KColors
 import net.axay.kspigot.event.listen
+import net.axay.kspigot.extensions.geometry.toSimple
 import org.bukkit.Location
 import org.bukkit.event.block.Action
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.player.PlayerInteractEvent
+import org.bukkit.inventory.EquipmentSlot
 import java.util.*
 import java.util.stream.Collectors
 import kotlin.collections.HashMap
@@ -40,24 +42,25 @@ class DamagerCommand {
                             val damager = selectors[player.uniqueId]?.damager
                             val firstLoc = selectors[player.uniqueId]?.firstLoc!!
                             val secondLoc = selectors[player.uniqueId]?.secondLoc!!
-                            damager?.area?.loc1 = firstLoc
-                            damager?.area?.loc2 = secondLoc
+                            damager?.saveLocations(firstLoc, secondLoc)
                             player.sendMessage("${damager?.name} successfully relocated 1. $firstLoc + 2. $secondLoc")
                             selectors.remove(player.uniqueId)
                         }
                     }
-                })
-                .register()
+                }).register()
         listen<BlockBreakEvent> {
-            val damagerInfo = selectors[it.player.uniqueId]
-            damagerInfo?.firstLoc = it.block.location
-            it.player.sendMessage("First position set at ${it.block.location}")
+            if (selectors.containsKey(it.player.uniqueId)) {
+                val damagerInfo = selectors[it.player.uniqueId]
+                damagerInfo?.firstLoc = it.block.location
+                it.player.sendMessage("${KColors.BLANCHEDALMOND}First position set at ${KColors.BLUE}${it.block.location.toSimple()}")
+                it.isCancelled = true
+            }
         }
         listen<PlayerInteractEvent> {
-            if (it.hasBlock() && it.action == Action.RIGHT_CLICK_BLOCK) {
+            if (it.hasBlock() && it.hand == EquipmentSlot.HAND && it.action == Action.RIGHT_CLICK_BLOCK && selectors.containsKey(it.player.uniqueId)) {
                 val damagerInfo = selectors[it.player.uniqueId]
                 damagerInfo?.secondLoc = it.clickedBlock?.location!!
-                it.player.sendMessage("Second position set at ${it.clickedBlock?.location}")
+                it.player.sendMessage("${KColors.BLANCHEDALMOND}Second position set at ${KColors.BLUE}${it.clickedBlock?.location!!.toSimple()}")
             }
         }
     }
