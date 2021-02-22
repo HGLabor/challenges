@@ -16,10 +16,15 @@ repositories {
     maven { url = uri("https://jcenter.bintray.com") }
     maven { url = uri("https://jitpack.io") }
     maven { url = uri("https://repo.maven.apache.org/maven2/") }
+    // COMMAND API
+    maven { url = uri("https://raw.githubusercontent.com/JorelAli/CommandAPI/mvn-repo/") }
+    maven { url = uri("https://repo.codemc.org/repository/maven-public/") }
+    // COMMAND API
 }
 
 dependencies {
     implementation("net.axay:KSpigot:v1.16.5_R24")
+    implementation("dev.jorel:commandapi-shade:5.8")
     compileOnly("com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT")
 }
 
@@ -37,6 +42,7 @@ publishing {
 tasks {
     shadowJar {
         relocate("net.axay.kspigot", "${project.group}.${project.name.toLowerCase()}.shadow.net.axay.kspigot")
+        minimize()
     }
 }
 
