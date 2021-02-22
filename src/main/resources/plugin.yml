@@ -1,5 +1,5 @@
 name: Challenges
-version: @version@
+version: 0.0.1
 main: de.hglabor.plugins.challenges.Challenges
 api-version: 1.16
 authors: [NoRisk]
