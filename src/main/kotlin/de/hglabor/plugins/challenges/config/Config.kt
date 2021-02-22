@@ -1,11 +1,13 @@
 package de.hglabor.plugins.challenges.config
 
 import de.hglabor.plugins.challenges.Challenges
+import de.hglabor.plugins.challenges.user.UserList
 import net.axay.kspigot.event.listen
 import org.bukkit.Bukkit
 import org.bukkit.GameRule
 import org.bukkit.Location
 import org.bukkit.event.entity.FoodLevelChangeEvent
+import org.bukkit.event.player.PlayerDropItemEvent
 
 object Config {
     init {
@@ -15,6 +17,9 @@ object Config {
         worldSettings()
         listen<FoodLevelChangeEvent> {
             it.isCancelled = true
+        }
+        listen<PlayerDropItemEvent> {
+            if (!UserList.getUser(it.player).inChallenge) it.isCancelled = true
         }
     }
 
@@ -41,6 +46,5 @@ object Config {
     fun getDouble(key: String) = Challenges.INSTANCE.config.getDouble(key)
     fun getLong(key: String) = Challenges.INSTANCE.config.getLong(key)
     fun getLocation(key: String) = Challenges.INSTANCE.config.getLocation(key)
-
 }
 

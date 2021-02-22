@@ -7,7 +7,6 @@ import de.hglabor.plugins.challenges.user.UserList
 import net.axay.kspigot.chat.KColors
 import net.axay.kspigot.event.listen
 import net.axay.kspigot.extensions.geometry.LocationArea
-import net.axay.kspigot.runnables.sync
 import net.axay.kspigot.runnables.task
 import net.axay.kspigot.structures.entities
 import org.bukkit.Bukkit
@@ -25,11 +24,9 @@ class Damager(val name: String) : Challenge {
     object DamagerListener {
         init {
             listen<PlayerDropItemEvent> {
+                if (it.isCancelled) return@listen
                 val user = UserList.getUser(it.player)
-                if (!user.inChallenge) {
-                    it.isCancelled = true
-                    return@listen
-                }
+                if (user.currentChallenge !is Damager) return@listen
                 it.itemDrop.owner = it.player.uniqueId
                 if (it.itemDrop.itemStack.type == Material.MUSHROOM_STEW) {
                     user.soupsDropped++
@@ -44,9 +41,7 @@ class Damager(val name: String) : Challenge {
                 val damager = user.currentChallenge as Damager
                 damager.complete(event.entity, false)
                 if (user.inChallenge) {
-                    user.inChallenge = false
-                    user.soupsEaten = 0
-                    user.soupsDropped = 0
+                    damager.resetPlayer(event.entity)
                 }
             }
             listen<PlayerRespawnEvent> {
@@ -82,13 +77,8 @@ class Damager(val name: String) : Challenge {
                     if (user.inChallenge) {
                         if (user.soupsEaten == soupsToEat) {
                             complete(entity, true)
-                            user.hasChallengeCompleted = true
                             entity.teleportAsync(Bukkit.getWorld("world")?.spawnLocation!!).thenAccept {
-                                entity.inventory.clear()
-                                user.inChallenge = false
-                                user.hasChallengeCompleted = false
-                                user.soupsEaten = 0
-                                user.soupsDropped = 0
+                                resetPlayer(entity)
                             }
                         } else {
                             damagePlayer(entity)
@@ -101,8 +91,18 @@ class Damager(val name: String) : Challenge {
         }
     }
 
+    private fun resetPlayer(player: Player) {
+        val user = UserList.getUser(player)
+        player.inventory.clear()
+        user.inChallenge = false
+        user.hasChallengeCompleted = false
+        user.soupsEaten = 0
+        user.soupsDropped = 0
+    }
+
     private fun complete(player: Player, hasCompleted: Boolean) {
         val user = UserList.getUser(player)
+        user.hasChallengeCompleted = hasCompleted
         if (hasCompleted)
             player.sendMessage("${KColors.BLUE}you've completed the damager")
         else

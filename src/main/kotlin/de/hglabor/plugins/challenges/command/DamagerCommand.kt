@@ -69,6 +69,7 @@ class DamagerCommand {
         INSTANCE.damagers
                 .stream()
                 .filter { damager: Damager -> damager.name.equals(s, ignoreCase = true) }
-                .findFirst().orElse(null)
+                .findFirst()
+                .orElse(null)
     }.overrideSuggestions(INSTANCE.damagers.stream().map(Damager::name).collect(Collectors.toList()))
 }
