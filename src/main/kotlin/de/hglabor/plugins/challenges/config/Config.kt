@@ -12,9 +12,11 @@ import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.FoodLevelChangeEvent
+import org.bukkit.event.hanging.HangingBreakByEntityEvent
 import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.event.vehicle.VehicleDamageEvent
 
 object Config {
     init {
@@ -29,6 +31,8 @@ object Config {
         listen<BlockPlaceEvent> { if (!isOp(it.player)) it.isCancelled = true }
         listen<PlayerJoinEvent> { it.joinMessage = null }
         listen<PlayerQuitEvent> { it.quitMessage = null }
+        listen<HangingBreakByEntityEvent> { it.isCancelled = true }
+        listen<VehicleDamageEvent> { it.isCancelled = true }
     }
 
     private fun isOp(player: Player) = player.isOp && player.gameMode == GameMode.CREATIVE

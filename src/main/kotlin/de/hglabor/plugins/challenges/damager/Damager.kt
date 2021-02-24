@@ -20,7 +20,7 @@ import org.bukkit.event.player.PlayerDropItemEvent
 import org.bukkit.event.player.PlayerRespawnEvent
 import org.bukkit.inventory.ItemStack
 
-class Damager(val name: String) : Challenge {
+open class Damager(val name: String) : Challenge {
     object DamagerListener {
         init {
             listen<PlayerAttemptPickupItemEvent> { if (it.item.owner != it.player.uniqueId) it.isCancelled = true }
@@ -48,8 +48,8 @@ class Damager(val name: String) : Challenge {
     }
 
     var area: LocationArea
-    private var configKey: String = "Damager.${name}"
-    private var damage: Double = 5.0
+    protected var configKey: String = "Damager.${name}"
+    protected var damage: Double = 5.0
     private var tickSpeed: Long = 20
     private var soupsToEat: Int = 64
 
@@ -88,7 +88,7 @@ class Damager(val name: String) : Challenge {
         }
     }
 
-    private fun resetPlayer(player: Player) {
+    protected open fun resetPlayer(player: Player) {
         val user = UserList.getUser(player)
         player.closeInventory()
         player.inventory.clear()
@@ -116,11 +116,11 @@ class Damager(val name: String) : Challenge {
         }
     }
 
-    private fun damagePlayer(entity: Player) {
+    protected open fun damagePlayer(entity: Player) {
         entity.damage(damage)
     }
 
-    private fun setPlayerDamagerReady(player: Player) {
+    protected open fun setPlayerDamagerReady(player: Player) {
         val user = UserList.getUser(player)
         user.inChallenge = true
         user.currentChallenge = this
@@ -149,7 +149,7 @@ class Damager(val name: String) : Challenge {
         Challenges.INSTANCE.saveConfig()
     }
 
-    private fun saveToConfig() {
+    protected open fun saveToConfig() {
         val config = Challenges.INSTANCE.config
         config.addDefault("${configKey}.damage", damage)
         config.addDefault("${configKey}.soupsToEat", soupsToEat)
