@@ -23,6 +23,8 @@ import org.bukkit.inventory.ItemStack
 class Damager(val name: String) : Challenge {
     object DamagerListener {
         init {
+            listen<PlayerAttemptPickupItemEvent> { if (it.item.owner != it.player.uniqueId) it.isCancelled = true }
+            listen<PlayerRespawnEvent> { it.respawnLocation = Bukkit.getWorld("world")?.spawnLocation!! }
             listen<PlayerDropItemEvent> {
                 if (it.isCancelled) return@listen
                 val user = UserList.getUser(it.player)
@@ -32,20 +34,15 @@ class Damager(val name: String) : Challenge {
                     user.soupsDropped++
                 }
             }
-            listen<PlayerAttemptPickupItemEvent> {
-                if (it.item.owner != it.player.uniqueId) it.isCancelled = true
-            }
             listen<PlayerDeathEvent> { event ->
                 event.drops.clear()
                 val user = UserList.getUser(event.entity)
+                if (user.currentChallenge !is Damager) return@listen
                 val damager = user.currentChallenge as Damager
                 damager.complete(event.entity, false)
                 if (user.inChallenge) {
                     damager.resetPlayer(event.entity)
                 }
-            }
-            listen<PlayerRespawnEvent> {
-                it.respawnLocation = Bukkit.getWorld("world")?.spawnLocation!!
             }
         }
     }
@@ -93,6 +90,7 @@ class Damager(val name: String) : Challenge {
 
     private fun resetPlayer(player: Player) {
         val user = UserList.getUser(player)
+        player.closeInventory()
         player.inventory.clear()
         user.inChallenge = false
         user.hasChallengeCompleted = false
@@ -109,9 +107,11 @@ class Damager(val name: String) : Challenge {
             player.sendMessage("${KColors.RED}you've FAILED the damager")
         player.sendMessage("Soups eaten: ${user.soupsEaten}")
         player.sendMessage("Soups dropped: ${user.soupsDropped}")
-        this.area.entities.forEach {
-            if (it is CraftItem && it.owner == player.uniqueId) {
-                it.itemStack.amount = 0
+        task(delay = 1) {
+            this.area.entities.forEach {
+                if (it is CraftItem && it.owner == player.uniqueId) {
+                    it.itemStack.amount = 0
+                }
             }
         }
     }
@@ -124,6 +124,7 @@ class Damager(val name: String) : Challenge {
         val user = UserList.getUser(player)
         user.inChallenge = true
         user.currentChallenge = this
+        player.inventory.clear()
         player.inventory.addItem(ItemStack(Material.STONE_SWORD))
         var size = 36
         size--
@@ -138,7 +139,6 @@ class Damager(val name: String) : Challenge {
         }
         damagePlayer(player)
     }
-
 
     fun saveLocations(loc1: Location, loc2: Location) {
         area.loc1 = loc1
