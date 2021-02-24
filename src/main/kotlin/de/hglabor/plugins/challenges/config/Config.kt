@@ -4,10 +4,17 @@ import de.hglabor.plugins.challenges.Challenges
 import de.hglabor.plugins.challenges.user.UserList
 import net.axay.kspigot.event.listen
 import org.bukkit.Bukkit
+import org.bukkit.GameMode
 import org.bukkit.GameRule
 import org.bukkit.Location
+import org.bukkit.entity.Player
+import org.bukkit.event.block.BlockBreakEvent
+import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.FoodLevelChangeEvent
 import org.bukkit.event.player.PlayerDropItemEvent
+import org.bukkit.event.player.PlayerJoinEvent
+import org.bukkit.event.player.PlayerQuitEvent
 
 object Config {
     init {
@@ -15,13 +22,16 @@ object Config {
         plugin.config.options().copyDefaults(true)
         plugin.saveConfig()
         worldSettings()
-        listen<FoodLevelChangeEvent> {
-            it.isCancelled = true
-        }
-        listen<PlayerDropItemEvent> {
-            if (!UserList.getUser(it.player).inChallenge) it.isCancelled = true
-        }
+        listen<FoodLevelChangeEvent> { it.isCancelled = true }
+        listen<PlayerDropItemEvent> { if (!UserList.getUser(it.player).inChallenge) it.isCancelled = true }
+        listen<EntityDamageByEntityEvent> { if (!(it.damager is Player && isOp(it.damager as Player))) it.isCancelled = true }
+        listen<BlockBreakEvent> { if (!isOp(it.player)) it.isCancelled = true }
+        listen<BlockPlaceEvent> { if (!isOp(it.player)) it.isCancelled = true }
+        listen<PlayerJoinEvent> { it.joinMessage = null }
+        listen<PlayerQuitEvent> { it.quitMessage = null }
     }
+
+    private fun isOp(player: Player) = player.isOp && player.gameMode == GameMode.CREATIVE
 
     private fun worldSettings() {
         val world = Bukkit.getWorld("world")
