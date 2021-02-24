@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.konan.properties.Properties
 
 plugins {
     java
@@ -6,6 +7,9 @@ plugins {
     kotlin("jvm") version "1.4.30"
     id("com.github.johnrengelman.shadow") version "6.1.0"
 }
+
+val localProps = Properties()
+localProps.load(file("local.properties").reader())
 
 repositories {
     mavenLocal()
@@ -20,11 +24,19 @@ repositories {
     maven { url = uri("https://raw.githubusercontent.com/JorelAli/CommandAPI/mvn-repo/") }
     maven { url = uri("https://repo.codemc.org/repository/maven-public/") }
     // COMMAND API
+    maven {
+        credentials {
+            username = localProps.getProperty("gpr.user") ?: System.getenv("USERNAME")
+            password = localProps.getProperty("gpr.key") ?: System.getenv("TOKEN")
+        }
+        url = uri("https://maven.pkg.github.com/HGLabor/HGLaborUtils")
+    }
 }
 
 dependencies {
     implementation("net.axay:KSpigot:v1.16.5_R24")
     implementation("dev.jorel:commandapi-shade:5.8")
+    implementation("de.hglabor:hglabor-utils:0.0.4")
     compileOnly("com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT")
     compileOnly("org.bukkit:craftbukkit:1.16.5-R0.1-SNAPSHOT")
 }
