@@ -50,8 +50,8 @@ open class Damager(val name: String) : Challenge {
     var area: LocationArea
     protected var configKey: String = "Damager.${name}"
     protected var damage: Double = 5.0
-    private var tickSpeed: Long = 20
-    private var soupsToEat: Int = 64
+    protected var tickSpeed: Long = 20
+    protected var soupsToEat: Int = 64
 
     init {
         val dummyLoc = Location(Bukkit.getWorld("world"), 0.0, 0.0, 0.0)
@@ -65,7 +65,7 @@ open class Damager(val name: String) : Challenge {
         damageScheduler()
     }
 
-    private fun damageScheduler() {
+    protected open fun damageScheduler() {
         task(period = tickSpeed) {
             area.entities.forEach { entity ->
                 if (entity is Player) {
@@ -90,6 +90,7 @@ open class Damager(val name: String) : Challenge {
 
     protected open fun resetPlayer(player: Player) {
         val user = UserList.getUser(player)
+        player.walkSpeed = 0.5F
         player.closeInventory()
         player.inventory.clear()
         user.inChallenge = false
@@ -98,7 +99,7 @@ open class Damager(val name: String) : Challenge {
         user.soupsDropped = 0
     }
 
-    private fun complete(player: Player, hasCompleted: Boolean) {
+    protected fun complete(player: Player, hasCompleted: Boolean) {
         val user = UserList.getUser(player)
         user.hasChallengeCompleted = hasCompleted
         if (hasCompleted)
@@ -124,6 +125,7 @@ open class Damager(val name: String) : Challenge {
         val user = UserList.getUser(player)
         user.inChallenge = true
         user.currentChallenge = this
+        player.walkSpeed = 0.2F
         player.inventory.clear()
         player.inventory.addItem(ItemStack(Material.STONE_SWORD))
         var size = 36

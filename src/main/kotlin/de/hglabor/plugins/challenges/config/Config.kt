@@ -7,16 +7,18 @@ import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.GameRule
 import org.bukkit.Location
+import org.bukkit.entity.Entity
 import org.bukkit.entity.Player
 import org.bukkit.event.block.BlockBreakEvent
 import org.bukkit.event.block.BlockPlaceEvent
+import org.bukkit.event.entity.EntityDamageByBlockEvent
 import org.bukkit.event.entity.EntityDamageByEntityEvent
+import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.FoodLevelChangeEvent
 import org.bukkit.event.hanging.HangingBreakByEntityEvent
-import org.bukkit.event.player.PlayerDropItemEvent
-import org.bukkit.event.player.PlayerJoinEvent
-import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.event.player.*
 import org.bukkit.event.vehicle.VehicleDamageEvent
+
 
 object Config {
     init {
@@ -24,18 +26,30 @@ object Config {
         plugin.config.options().copyDefaults(true)
         plugin.saveConfig()
         worldSettings()
-        listen<FoodLevelChangeEvent> { it.isCancelled = true }
         listen<PlayerDropItemEvent> { if (!UserList.getUser(it.player).inChallenge) it.isCancelled = true }
-        listen<EntityDamageByEntityEvent> { if (!(it.damager is Player && isOp(it.damager as Player))) it.isCancelled = true }
-        listen<BlockBreakEvent> { if (!isOp(it.player)) it.isCancelled = true }
-        listen<BlockPlaceEvent> { if (!isOp(it.player)) it.isCancelled = true }
-        listen<PlayerJoinEvent> { it.joinMessage = null }
+        listen<EntityDamageByEntityEvent> { if (!(it.damager is Player && it.damager.canByPassEvent)) it.isCancelled = true }
+        listen<EntityDamageByBlockEvent> { if (!(it.damager is Player && (it.damager as Player).canByPassEvent)) it.isCancelled = true }
+        listen<EntityDamageEvent> { if (it.entity is Player && !UserList.getUser(it.entity as Player).inChallenge) it.isCancelled = true }
+        listen<BlockBreakEvent> { if (!it.player.canByPassEvent) it.isCancelled = true }
+        listen<BlockPlaceEvent> { if (!it.player.canByPassEvent) it.isCancelled = true }
+        listen<PlayerJoinEvent> {
+            it.joinMessage = null
+            it.player.gameMode = GameMode.ADVENTURE
+            it.player.walkSpeed = 0.5F
+        }
         listen<PlayerQuitEvent> { it.quitMessage = null }
-        listen<HangingBreakByEntityEvent> { it.isCancelled = true }
-        listen<VehicleDamageEvent> { it.isCancelled = true }
+        listen<HangingBreakByEntityEvent> { if (!it.remover?.canByPassEvent!!) it.isCancelled = true }
+        listen<VehicleDamageEvent> { if (!it.attacker?.canByPassEvent!!) it.isCancelled = true }
+        listen<PlayerInteractEvent> { if (!it.player.canByPassEvent) it.isCancelled = true }
+        listen<PlayerInteractEntityEvent> { if (!it.player.canByPassEvent) it.isCancelled = true }
+        listen<FoodLevelChangeEvent> { it.isCancelled = true }
     }
 
-    private fun isOp(player: Player) = player.isOp && player.gameMode == GameMode.CREATIVE
+    private val Entity.canByPassEvent: Boolean
+        get() {
+            if (this is Player) return false
+            return isOp && (this as Player).gameMode == GameMode.CREATIVE
+        }
 
     private fun worldSettings() {
         val world = Bukkit.getWorld("world")
